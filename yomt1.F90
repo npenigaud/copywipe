@@ -1,0 +1,31 @@
+MODULE YOMT1
+
+INTEGER, PARAMETER      :: NU=10
+
+TYPE TT
+  INTEGER               :: TOTAL
+  REAL, POINTER         :: Y (:)
+END TYPE
+
+TYPE UU
+  INTEGER              :: L
+  INTEGER, ALLOCATABLE :: D(:)
+END TYPE
+
+TYPE VV
+  INTEGER :: SUM3
+  TYPE (UU) :: UU1
+  TYPE (UU), POINTER :: UU2=>NULL()
+END TYPE
+
+TYPE UU2
+  INTEGER              :: L
+  INTEGER              :: D(NU)
+END TYPE
+
+TYPE WW
+  TYPE(UU2) :: UU(NU)
+END TYPE
+
+END
+

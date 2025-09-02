@@ -1,0 +1,122 @@
+#include "offloading_macros.h"
+PROGRAM TEST
+
+USE YOMT1, ONLY        : TT,UU,VV,UU2,WW,NU
+USE UTIL_TT_MOD , ONLY : COPY,WIPE
+USE UTIL_UU_MOD , ONLY : COPY,WIPE
+USE UTIL_VV_MOD , ONLY : COPY,WIPE
+USE UTIL_UU2_MOD, ONLY : COPY,WIPE
+USE UTIL_WW_MOD , ONLY : COPY,WIPE
+
+IMPLICIT NONE
+
+INTEGER,PARAMETER  :: NY=10
+INTEGER,PARAMETER  :: NZ1=10
+INTEGER,PARAMETER  :: NZ2=10
+
+TYPE(TT)           :: TTSUM1
+TYPE(TT)           :: TTSUM2
+
+REAL,TARGET        :: SUM1(NU)
+REAL,TARGET        :: SUM2(NU)
+
+TYPE(UU),TARGET    :: UUSUM3
+
+TYPE(VV)           :: VV1
+
+TYPE(WW)           :: UUTAB
+
+REAL               :: YREEL(NY)
+
+INTEGER            :: I,J,K
+INTEGER            :: INTER1
+
+DO K=1,10
+  WRITE (0,*) "K = ",K," initialising on CPU and copying"
+  TTSUM1%Y=>SUM1
+  TTSUM1%TOTAL=0
+  CALL COPY(TTSUM1)
+
+  TTSUM2%Y=>SUM2
+  TTSUM2%TOTAL=0
+  CALL COPY(TTSUM2)
+  
+  UUSUM3%L=NU
+  ALLOCATE(UUSUM3%D(NU))
+  
+  DO I=1,NU
+    UUTAB%UU(I)%L=I
+    DO J=1,I
+      UUTAB%UU(I)%D(J)=1
+    ENDDO
+  ENDDO
+  CALL COPY(UUTAB)
+  
+  VV1%SUM3=0
+  VV1%UU1%L=NU
+  ALLOCATE(VV1%UU1%D(NU))
+  VV1%UU2=>UUSUM3
+  CALL COPY(VV1)
+  
+  WRITE (0,*) "K = ",K," copying done " 
+  
+  WRITE (0,*) "calculation on GPU, step ",K  
+!  GPU_DATA_PRESENT(TTSUM1, TTSUM2, UUTAB, UUSUM3, VV1, SUM1, SUM2)
+
+!  !$omp target 
+  DO I=1,10
+    TTSUM1%Y(I)=0.0
+    TTSUM2%Y(I)=0.0
+    VV1%UU1%D(I)=0
+    VV1%UU2%D(I)=0
+    INTER1=0
+    DO J=1,UUTAB%UU(I)%L
+      INTER1=INTER1+UUTAB%UU(I)%D(J)
+    ENDDO
+    TTSUM1%TOTAL=TTSUM1%TOTAL+INTER1
+    TTSUM2%TOTAL=TTSUM2%TOTAL+INTER1*INTER1
+    VV1%SUM3=VV1%SUM3+INTER1**3
+    TTSUM1%Y(I)=TTSUM1%Y(I)+REAL(INTER1)
+    TTSUM2%Y(I)=TTSUM2%Y(I)+REAL(INTER1**2)
+    VV1%UU2%D(I)=VV1%UU2%D(I)+(INTER1)**3
+    VV1%UU1%D(I)=VV1%UU1%D(I)+(INTER1)**3
+  ENDDO
+  WRITE(0,*) "TTSUM1%TOTAL , expected : ",TTSUM1%TOTAL,NU*(NU+1)/2
+  WRITE(0,*) "TTSUM2%TOTAL , expected : ",TTSUM2%TOTAL,NU*(NU+1)*(2*NU+1)/6
+  WRITE(0,*) "VV1%SUM3, expected : ",VV1%SUM3,NU*NU*(NU+1)*(NU+1)/4
+  DO I=1,NU
+    WRITE(0,*) "iteration, values of VV1, expected ",I,VV1%UU2%D(I),VV1%UU1%D(I),I**3
+  ENDDO
+  DO I=1,NU
+    WRITE(0,*) "iteration, values of SUM1, expected ",I,SUM1(I),REAL(I)
+  ENDDO
+  DO I=1,NU
+    WRITE(0,*) "iteration, values of SUM2, expected ",I,SUM2(I),REAL(I**2)
+  ENDDO
+
+ 
+!  GPU_END_SERIAL
+  
+!  GPU_END_DATA
+
+  WRITE(0,*) "K = ",K, " wiping and deallocating"    
+  CALL WIPE(UUTAB)
+  CALL WIPE(VV1)
+  DEALLOCATE(VV1%UU1%D)
+  DEALLOCATE(VV1%UU2%D)
+  CALL WIPE(TTSUM2)
+  CALL WIPE(TTSUM1)
+  WRITE(0,*) "K = ",K, " wiping and deallocating done"   
+
+
+
+ENDDO
+
+END PROGRAM TEST
+
+
+
+
+
+
+
