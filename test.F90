@@ -61,9 +61,9 @@ DO K=1,10
   WRITE (0,*) "K = ",K," copying done " 
   
   WRITE (0,*) "calculation on GPU, step ",K  
-!  GPU_DATA_PRESENT(TTSUM1, TTSUM2, UUTAB, UUSUM3, VV1, SUM1, SUM2)
+  GPU_DATA_PRESENT(TTSUM1, TTSUM2, UUTAB, UUSUM3, VV1, SUM1, SUM2)
 
-!  !$omp target 
+  !$omp target 
   DO I=1,10
     TTSUM1%Y(I)=0.0
     TTSUM2%Y(I)=0.0
@@ -95,9 +95,9 @@ DO K=1,10
   ENDDO
 
  
-!  GPU_END_SERIAL
+  GPU_END_SERIAL
   
-!  GPU_END_DATA
+  GPU_END_DATA
 
   WRITE(0,*) "K = ",K, " wiping and deallocating"    
   CALL WIPE(UUTAB)
