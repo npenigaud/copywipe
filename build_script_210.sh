@@ -4,12 +4,12 @@ FFLAGS="-DUSE_STACK ${FFLAGS} ${BIGENDIAN} ${OPENMP}"
 FFLAGS="$(echo ${FFLAGS} | sed -e 's/-Ofast/-O3 -ffast-math -fstack-arrays/g' -e "s: -I${PREFIX_DIR}/include::g")"
 LDFLAGS="$(echo ${LDFLAGS} | sed -e 's/-Ofast/-O3 -ffast-math/g')" 
 
-FFLAGS="-DUSE_STACK -march=znver5 -ffp-contract=fast -O3 -ffast-math -fPIC -ffree-form -cpp -fconvert=big-endian -fopenmp "
-HIP_FFLAGS="--offload-arch=gfx942 "
+FFLAGS="-DUSE_STACK -march=znver5 -ffp-contract=fast -O1 -ffast-math -fPIC -ffree-form -cpp -fconvert=big-endian -fopenmp "
+HIP_FFLAGS="--offload-arch=gfx90a "
 
-LDFLAGS=" -march=znver5 -ffp-contract=fast -O3 -ffast-math -fPIC -lm -lrt "
+LDFLAGS=" -march=znver5 -ffp-contract=fast -O1 -ffast-math -fPIC -lm -lrt "
 OPENMP="-fopenmp "
-HIP_LDFLAGS="--offload-arch=gfx942 -lflang_rt.hostdevice "
+HIP_LDFLAGS="--offload-arch=gfx90a -lflang_rt.hostdevice "
 
 
 FC=flang

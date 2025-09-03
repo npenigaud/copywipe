@@ -57,7 +57,7 @@ DO K=1,10
   ALLOCATE(VV1%UU1%D(NU))
   VV1%UU2=>UUSUM3
   CALL COPY(VV1)
-  
+
   WRITE (0,*) "K = ",K," copying done " 
   
   WRITE (0,*) "calculation on GPU, step ",K  
